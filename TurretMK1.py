@@ -2,12 +2,12 @@ import time
 
 import cv2
 from ultralytics import YOLO
-import face_recognition
+
 # --- settings you can change ---#
 CAMERA_INDEX = 0  # camera index (0 for default camera)
 CONFIDENCE = 0.45
-CHEST_Y = 0.55
-STICKY_FRAMES = 8
+CHEST_Y = 0.45
+STICKY_FRAMES = 20
 LOST_FRAMES_TO_STOP = 10
 MODEL_NAME = "yolov8n.pt"
 
@@ -19,8 +19,10 @@ def box_area(box):
 
 def chest_point(box):
     x1, y1, x2, y2 = box
+    h = y2 - y1
+    ratio = 0.34 if h > 380 else 0.50
     cx = int((x1 + x2) / 2)
-    cy = int(y1 + (y2 - y1) * CHEST_Y)
+    cy = int(y1 + h * ratio)
     return cx, cy
 
 
@@ -33,30 +35,21 @@ def iou(a, b):
     union = box_area(a) + box_area(b) - inter
     return inter / union if union > 0 else 0
 
-def is_owner(frame, box, owner_encoding):
+def is_red_hat(frame, box):
     x1, y1, x2, y2 = box
-    x1 = max(0, x1)
-    y1 = max(0, y1)
-    crop = frame [y1:y2, x1:x2]
-    if crop.size == 0:
+    h = max(1, y2 - y1)
+    top = frame[max(0, y1): y1 + h // 3, max(0, x1): x2]
+    if top.size == 0:
         return False
-    rbg = cv2.cvtColor(crop, cv2.COLOR_BGR2RGB)
-    encs = face_recognition.face_encodings(rbg)
-    if not encs:
-        return False
-    return face_recognition.compare_faces([owner_encoding], encs[0], 0.5)[0]
+    hsv = cv2.cvtColor(top, cv2.COLOR_BGR2HSV)
+    m1 = cv2.inRange(hsv, (0, 125, 125), (10, 255, 255))
+    m2 = cv2.inRange(hsv, (172, 125, 125), (180, 255, 255))
+    red = cv2.bitwise_or(m1, m2)
+    return (red > 0).mean() > 0.08
 
 def main():
     print("loading YOLOv8n (first run downloads the model)...")
     model = YOLO(MODEL_NAME)
-    owner_image = face_recognition.load_image_file("owner.jpg")
-    owner_encs = face_recognition.face_encodings(owner_image)
-    if not owner_encs:
-        print("No face found in owner.jpg")
-        return
-    owner_encoding = owner_encs[0]
-
-
     cap = cv2.VideoCapture(CAMERA_INDEX)
     if not cap.isOpened():
         print("Could not open camera. Try CAMERA_INDEX = 1")
@@ -91,6 +84,7 @@ def main():
             for b in results.boxes:
                 x1, y1, x2, y2 = [int(v) for v in b.xyxy[0].tolist()]
                 people.append((x1, y1, x2, y2))
+                people =[p for p in people if not is_red_hat(frame, p)]  # filter out red hats
         target = None
         if people:
             closest = max(people, key=box_area)
@@ -114,13 +108,14 @@ def main():
             else:
                 target = closest
                 sticky_count = 0
-                if target is not None and is_owner(frame, target, owner_encoding):
-                    others = [p for p in people if p != target]
-                    if others:
-                        target = max(others, key=box_area)
-                    else:
-                        target = None
             sticky_box = target
+            if target is not None and is_red_hat(frame, target):
+                others = [p for p in people if p != target and not is_red_hat(frame, p)]
+                if others:
+                    target = max(others, key=box_area)
+                else:
+                    target = None           
+            
             lost_count = 0
         else:
             lost_count += 1
