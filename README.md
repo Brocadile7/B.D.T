@@ -1,38 +1,18 @@
-AI Tracking Turret
-An AI‑powered tracking turret that uses YOLOv8 to detect people, lock onto the largest target, and track their chest position. The system includes sticky tracking, red‑hat filtering, and smooth reacquisition to keep the aim stable.
-Runs in software‑only mode with on‑screen visualization. Hardware control can be added later.
+Hello! Thank you for choosing to read this read me!
 
-Features
-Real‑time person detection
+In this project I am making a computer vision AI tracking turret.
 
-Chest‑point targeting
+Currently I have made most all of the code for the computer vison 
+and it tracks people using yolov8n and aims the crossbar at around the chest
+(To avoid injury when I add hardware) and I can toggle through Armed and Disarmed 
 
-Sticky target tracking
+Controls are
+A = Armed/Disarmed
+Q = Quit
+(must be uppercase)
+also, a tip for if you use this code make sure you have yolo installed and 
+when you run it if it does not change Armed/Disarmed and you can't quit, its probably 
+because you clicked something besides the screen that pops up when you run the code,
+To fix this, just click the screen that has the computer vison playing and that should fix it.
 
-Automatic reacquisition
-
-Red‑hat filtering
-
-Armed / disarmed modes
-
-On‑screen HUD and status display
-
-Requirements
-Python 3.8+
-
-OpenCV
-
-Ultralytics YOLOv8
-
-A webcam
-
-YOLO model file (yolov8n.pt)
-
-Usage
-Run the program and use the on‑screen display to track targets.
-
-Controls:
-
-A — Arm / Disarm
-
-Q — Quit
+Thankyou!
