@@ -5,6 +5,12 @@ In this project I am making a computer vision AI tracking turret.
 Currently I have made most all of the code for the computer vison 
 and it tracks people using yolov8n and aims the crossbar at around the chest
 (To avoid injury when I add hardware) and I can toggle through Armed and Disarmed 
+when I was coding some errors I ran into were the body tracking kept only tracking the 
+body and not the head so to fix that I fixed up the code to include the whole body but it still 
+sometimes will take the head out of the picture that is another reason I added the red hat filter.
+Also the crossbar was aiming too low (we don't want it to aim their!) and was changing depending on how
+far away I was from the camera so I am planning on adding some more code to lower the crossbar a little
+every time it gets a little closer and the same for when i am walking away from it.
 
 Controls are
 A = Armed/Disarmed
@@ -16,3 +22,4 @@ because you clicked something besides the screen that pops up when you run the c
 To fix this, just click the screen that has the computer vison playing and that should fix it.
 
 Thankyou!
+This is one of my first hardware projects
